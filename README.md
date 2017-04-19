@@ -2,7 +2,7 @@
 
 This a small BOOTSTRAP-GROOVY-DSL-Script which can produce your websites. For some functions it uses the GLKVRUNNER from the LKV NRW. But I will also develop a branch without the GLKVRUNNER, 
 if somebody wants to use this DSL. One advantage of the glkvrunner is that you can produce HTML-Sites with dynamic content on the fly with the REST-based GSERVICESERVER, which I produced based on the glkvrunner. 
-I use DART for webapp-development. BOOTSTRAPDSL is developed under GPL2, but the glkvrunner not. So it can also produce template-files for the dart-app.
+I use DART for webapp-development. BOOTSTRAPDSL is developed under LGPL3, but the glkvrunner not. So it can also produce template-files for the dart-app.
 
 ### USAGE
 
