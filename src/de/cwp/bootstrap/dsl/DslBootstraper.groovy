@@ -1,13 +1,16 @@
 package de.cwp.bootstrap.dsl
 
+import com.github.rjeschke.txtmark.Processor
 import de.lkv.basis.container.GenJavaBean
 import de.lkv.basis.container.VarRaum
+import de.lkv.basis.container.iface.IVarRaum
 import de.lkv.basis.expressionparser.ExpressionParser
 import de.lkv.basis.utils.StringBearbeiter
 import de.lkvnrw.sql.factory.SQLFactory
 import groovy.text.GStringTemplateEngine
 import javafx.util.Pair
-import com.github.rjeschke.txtmark.Processor;
+
+import static de.lkv.basis.utils.StringBearbeiter.splitteEinmal
 
 class DslBootstraper {
 
@@ -197,7 +200,7 @@ def container(param){
     pushit("container",param)
 }
   def col(param){
-   def params =  StringBearbeiter.splitteEinmal(param, ";")
+   def params =  splitteEinmal(param, ";")
     def cols = params[0].split(":");
     pushit("col",params[1])
       def ind = 0;
@@ -255,7 +258,7 @@ def media(param) {
      tds.each{
          if (it.startsWith('§')){
                def itx=it.substring(1)
-               def gesplittet=StringBearbeiter.splitteEinmal(itx,"_");
+               def gesplittet=splitteEinmal(itx,"_");
                def nactual = buildElement("td", null)
                String cont = "<button id='${itx}'> ${gesplittet[1]}</button>"
                nactual.setContent(cont);
@@ -278,7 +281,7 @@ def in_email(param){
     nactual.setProperty("type","email")
     }
   def textarea(param){
-    def nactual= buildElement("textarea",param)
+
     }
 def in_text(param){
     def nactual = buildElement("in_text",param)
@@ -309,6 +312,7 @@ def formgroup(param){
         actual.setProperty("content",param)
     }
   def getMd(param){
+      param = ExpressionParser.ersetzeDoubleCurly(varraum, param, false);
       def mdstr="";
       if (param.startsWith("§")){
         param = param.substring(1);
@@ -325,7 +329,63 @@ def formgroup(param){
       def result = Processor.process(mdstr);
       text(result);
   }
+   def getMdExt(param){
+      param = ExpressionParser.ersetzeDoubleCurly(varraum, param, false);
+      def mdstr="";
+     if (param.startsWith("§")){
+        param = param.substring(1);
+        def gesplittet = param.split(";");
+        def titel = gesplittet[0]
+       def synonym = gesplittet[1]
+        def tablename = gesplittet[2]
+        def keyfield = gesplittet[3]
+        def keyvalue =  gesplittet[4]
+        def mdfields = gesplittet[5];
+          text(" <h2>${titel}</h2>");
+         def sqlstr= "select * from ${tablename} where ${keyfield} = '${keyvalue}'"
+         def erg = SQLFactory.selectFirstRow(synonym,sqlstr)
+         def fields = mdfields.split(",");
+          fields.each{field->
+              mdstr = erg.getPropertyAsStr(field);
+              if (varraum != null) mdstr = ExpressionParser.ersetzeDoubleCurly(varraum,mdstr,false);
+              text("<div> <h3>${field}</h3><br/><pre>"+ Processor.process(mdstr) + "</pre></div>");
+          }
+       }
+    }
 
+ def getTexte(param){
+      def mdstr="";
+     param = ExpressionParser.ersetzeDoubleCurly(varraum, param, false);
+     if (param.startsWith("§")) {
+         param = param.substring(1);
+         def gesplittet = param.split(";");
+         def titel = gesplittet[0]
+         def synonym = gesplittet[1]
+         def tablename = gesplittet[2]
+         def keyfield = gesplittet[3]
+         def keyvalue = gesplittet[4]
+         def mdfields = gesplittet[5];
+         text(" <h2>${titel}</h2>");
+         def sqlstr = "select * from ${tablename} where ${keyfield} = '${keyvalue}'"
+         def resultlist = new ArrayList<GenJavaBean>();
+         SQLFactory.selectMatrixAsList(synonym, sqlstr, resultlist);
+         resultlist.each {erg ->
+             println("ERG:${erg}");
+             def fields = mdfields.split(",");
+             text("<h2>${keyfield} - ${keyvalue}</h2>")
+             fields.each { field ->
+                 mdstr = erg.getPropertyAsStr(field);
+                 println("${field} TEXTE:${mdstr}");
+                 if (varraum != null) mdstr = ExpressionParser.ersetzeDoubleCurly(varraum, mdstr, false);
+                 println("${field} TEXTE_EP:${mdstr}");
+                 //  if (mdstr.indexOf("<")>0)
+                 //  text("<div> <h3>${field}</h3><br/></textarea rows=\"8\" cols=\"80\">"+ mdstr + "</textarea>");
+                 if (mdstr.indexOf("<") >= 0) mdstr = StringBearbeiter.str2csv(mdstr);
+                 text("<div> <h3>${field}</h3><br/><pre><code>" + mdstr + "</code></pre>");
+             }
+         }
+     }
+    }
     def text(param){
         def cont = new ElementContainer()
         cont.setName("p");
@@ -370,7 +430,7 @@ def setClassFile(param){
    def setLinkFile(param){
        def cf = new File(param);
        cf.eachLine { line ->
-           def items =   StringBearbeiter.splitteEinmal(line,":");
+           def items =   splitteEinmal(line,":");
            links.put(items[0], items[1]);
        }
   }
@@ -414,6 +474,7 @@ def setClassFile(param){
         def gesplittet = param.split(";");
         def synonym = gesplittet[0]
         def id = gesplittet[1]
+        def idsplit = id.split("_");
         def rf = gesplittet[2].split(",")
         def sqlstr= gesplittet[3];
         def erglist = [];
@@ -425,10 +486,11 @@ def setClassFile(param){
             def trtdstr ="";
             def seperator="";
             rf.each{
-                if (it == id){trtdstr+="${seperator}§${gjb.getProperty(it)}"}
+                if (it == idsplit[1]){trtdstr+="${seperator}§${idsplit[0]}_${gjb.getProperty(it)}"}
                 else trtdstr+="${seperator}${gjb.getProperty(it)}"
                 seperator=";"
             }
+            println "trtd:${trtdstr}";
             trtd(trtdstr)
         }
 
@@ -466,8 +528,12 @@ def setClassFile(param){
         nactual.setProperty("content",htmlstr);
 
     }
+    def iframe(param) {
+        param = param.replace("§","/service/getdocument/dbsynonym/${synonym}/");
+        def nactual = buildElement("iframe", param)
+    }
     def buildNavTab(param) {
-        def spliterg=StringBearbeiter.splitteEinmal(param,":");
+        def spliterg=splitteEinmal(param,":");
         pushit("navtab",spliterg[1]);
         def paramsplit= spliterg[0].split(";");
         def ind=0;
@@ -523,11 +589,11 @@ def setClassFile(param){
 
      def navbarlist(param) {
 
-         def spliterg=StringBearbeiter.splitteEinmal(param,":");
+         def spliterg=splitteEinmal(param,":");
 
         def  linklist= spliterg[0].split(";");
-         spliterg =StringBearbeiter.splitteEinmal(spliterg[1],":");
-         def splitergdl= StringBearbeiter.splitteEinmal(spliterg[0],"?");
+         spliterg =splitteEinmal(spliterg[1],":");
+         def splitergdl= splitteEinmal(spliterg[0],"?");
        def dropdownlist= splitergdl[1].split(";");
          pushit("navbarlist",spliterg[1]);
         def html1str = "";
@@ -572,14 +638,14 @@ def setClassFile(param){
 // builds sind hier complexere Methoden mit incl. Listen etc.
  def buildFooter1(param){
      param = param.replace("§","/service/getdocument/dbsynonym/${synonym}/");
-     def spliterg=StringBearbeiter.splitteEinmal(param,":");
+     def spliterg=splitteEinmal(param,":");
      pushit("footer",spliterg[1]);
      pushit("container","style:padding-left: 0");
      pushit("row",null);
      pushit("col12",null);
      pushit("div","class:wrapper;style:background-color:#ecf0f1%semikolon padding: 1em 2em%semikolon");
       if (spliterg[0].indexOf("<>")>0){
-           def subspliterg = StringBearbeiter.splitteEinmal(spliterg[0],"<>");
+           def subspliterg = splitteEinmal(spliterg[0],"<>");
            buildElement("h3","content:${subspliterg[0]}");
           buildAnkerList(subspliterg[1])
       }
@@ -615,12 +681,12 @@ private void buildAnkerList(subspliterg) {
     def indicator="";
     def imgitems="";
     param = param.replace("§","/service/getdocument/dbsynonym/${synonym}/");
-    def spliterg=StringBearbeiter.splitteEinmal(param,":");
+    def spliterg=splitteEinmal(param,":");
     def imgnames=null;
 
     def imgtexte = null;
         if (spliterg[0].indexOf("<>")>0){
-            def subspliterg = StringBearbeiter.splitteEinmal(spliterg[0],"<>");
+            def subspliterg = splitteEinmal(spliterg[0],"<>");
             imgnames = subspliterg[0].split(",");
             imgtexte = subspliterg[1].split("|");
 
@@ -751,7 +817,7 @@ private void buildAnkerList(subspliterg) {
             if (parammap != null) {
                 def values = parammap.split(";");
                 values.each {
-                    def ats = StringBearbeiter.splitteEinmal(it,":");
+                    def ats = splitteEinmal(it,":");
                     ats[1]= ats[1].replaceAll("%semikolon",";");
                      ats[1]= ats[1].replaceAll("%doppelpunkt",":");
                    // vorther def ats =  it.split(':');
@@ -761,6 +827,9 @@ private void buildAnkerList(subspliterg) {
         }catch(Exception e){println("Parameterfehler in ${parammap}:Prüfe die Trennzeichen Es sollten Semikolon und Doppelpunkt, kein Gleichheitszeichen verwendet werden ")}
 		return pm;
 	}
+    def IVarRaum getVarRaum(){
+        return varraum;
+    }
 /**
  * baut aus einem String eine Liste mit Key Value Paaren (incl. Wiederholungen)
  * @param params
@@ -773,7 +842,7 @@ private void buildAnkerList(subspliterg) {
 
         def values = params.split(";");
         values.each{
-            def ats = StringBearbeiter.splitteEinmal(it,":");
+            def ats = splitteEinmal(it,":");
            // def ats=it.split(':');
             ats[1]= ats[1].replaceAll("%semikolon",";");
             ats[1]= ats[1].replaceAll("%doppelpunkt",":");

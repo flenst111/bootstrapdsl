@@ -92,6 +92,12 @@
                         }
                         printstr += nvalue + "'"
                     }
+                else if (key=='src'){
+                    value=value.replaceAll('https//','https://');
+                    value= value.replaceAll('http//','http://');
+                    printstr += " ${key}='${value}' "
+
+                 }
                 else printstr += " ${key}='${value}'"
 
             }

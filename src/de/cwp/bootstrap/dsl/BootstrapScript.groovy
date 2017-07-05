@@ -19,6 +19,7 @@ import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.CompilerConfiguration;
 abstract class BootstrapScript extends Script {
     int defid=0;
+    def varraum = null;
     def dartoutput(param){
         this.binding.bootstraper.setDartOutput(param)
      }
@@ -36,11 +37,13 @@ abstract class BootstrapScript extends Script {
         println "description ${parammap}"
         this.binding.bootstraper.setDescription(parammap)
     }
-    def setVarRaum(VarRaum varraum){
+    def setVarRaum(IVarRaum varraum){
         this.binding.bootstraper.setVarRaum(varraum);
         this.varraum = varraum;
     }
-
+    def getVarRaum(){
+        this.varraum= this.binding.bootstraper.getVarRaum();
+    }
     def text(param){
          println "text ${param}"
          this.binding.bootstraper.text(param)
@@ -84,6 +87,11 @@ abstract class BootstrapScript extends Script {
     def tagnamefile(param){
          println "tagnamefile ${param}"
         this.binding.bootstraper.setTagNameFile(param)
+    }
+
+    def iframe(param){
+         println "iframe ${param}"
+        this.binding.bootstraper.iframe(param)
     }
     /**
      * Soll ein HTMLBODY etc aufgebaut werden? bei include false
@@ -229,7 +237,16 @@ abstract class BootstrapScript extends Script {
         this.binding.bootstraper.getMd(param)
 
     }
+   def mdext(param){
+        println "getMdExt ${param}"
+        this.binding.bootstraper.getMdExt(param)
 
+    }
+    def texte(param){
+        println "getText ${param}"
+        this.binding.bootstraper.getTexte(param)
+
+    }
     def table(param){
          println "table ${param}"
         this.binding.bootstraper.table(param)

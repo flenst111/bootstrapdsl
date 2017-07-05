@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
-<project name="${projekt}" default="buildjar" basedir="./">
+<project name="dsl4bootstrap" default="buildjar" basedir="./">
 	<property file="build.properties" />
-	<property file="deploy.properties" />
 	<property environment="env" />
 	<path id="groovc.classpath">
 		<pathelement location="${env.GROOVYLIB}" />
@@ -131,20 +130,5 @@
 			<fileset dir="${src.dir}" includes="**/resources/**" />
 		</copy>
 	</target>
-	<taskdef name="codenarc" classname="org.codenarc.ant.CodeNarcTask" />
-	<target name="runCodeNarc" depends="buildjar" description="checkbugs">
-		<codenarc
-			ruleSetFiles="rulesets/basic.xml,rulesets/exceptions.xml,rulesets/imports.xml"
-			maxPriority1Violations="0">
 
-			<report type="html">
-				<option name="outputFile" value="reports/CodeNarcAntReport.html" />
-				<option name="title" value="GLKVRUNNER" />
-			</report>
-
-			<fileset dir="src">
-				<include name="**/*.groovy" />
-			</fileset>
-		</codenarc>
-	</target>
 </project>
