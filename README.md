@@ -379,5 +379,5 @@ end "panel"
 end "col3"
 end "row"
 ```
-The html-output will be shown in a few weeks on 'suedertausch.de'
+I use this DSL at [Leever-miteenanner.de](http://leever-miteenanner.de)
 
