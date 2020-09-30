@@ -1,4 +1,4 @@
-## BOOTSTRAPDSL a BOOTSTRAP and HTML based DSL, which produces HTML-Sites from DSL-Scripts
+## BOOTSTRAPDSL a BOOTSTRAP and HTML based Groovy-DSL, which produces HTML-Sites from DSL-Scripts
 
 This a small BOOTSTRAP-GROOVY-DSL-Script which can produce your websites. For some functions it uses the GLKVRUNNER from the LKV NRW. But I will also develop a branch without the GLKVRUNNER, 
 if somebody wants to use this DSL. One advantage of the glkvrunner is that you can produce HTML-Sites with dynamic content on the fly with the REST-based GSERVICESERVER, which I produced based on the glkvrunner. 
